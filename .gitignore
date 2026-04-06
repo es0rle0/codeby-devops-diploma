@@ -1,0 +1,32 @@
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Python / misc
+__pycache__/
+
+# Terraform
+**/.terraform/*
+**/.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Secrets / env
+.env
+.env.*
+secrets.yaml
+values-secret.yaml
+*.pem
+*.key
+
+# Helm / k8s temp
+*.tgz
+
+# Logs
+*.log
