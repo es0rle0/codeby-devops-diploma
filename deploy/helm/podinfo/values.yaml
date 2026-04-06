@@ -1,0 +1,24 @@
+namespace: podinfo
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/es0rle0/podinfo-diploma
+  tag: sha-ccaaab7
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 9898
+
+container:
+  port: 9898
+  logLevel: info
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
