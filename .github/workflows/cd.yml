@@ -1,0 +1,87 @@
+name: cd
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/**'
+    paths:
+      - 'deploy/helm/**'
+      - '.github/workflows/cd.yml'
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'GHCR image tag to deploy'
+        required: true
+        default: 'latest'
+        type: string
+
+env:
+  RELEASE_NAME: podinfo
+  RELEASE_NAMESPACE: podinfo
+  CHART_PATH: deploy/helm/podinfo
+  IMAGE_REPOSITORY: ghcr.io/${{ github.repository_owner }}/podinfo-diploma
+
+jobs:
+  helm-validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      - name: Helm lint
+        run: helm lint $CHART_PATH
+
+      - name: Helm template
+        run: |
+          helm template $RELEASE_NAME $CHART_PATH \
+            --namespace $RELEASE_NAMESPACE \
+            --set image.repository=$IMAGE_REPOSITORY \
+            --set image.tag=sha-${GITHUB_SHA}
+
+  deploy:
+    if: github.event_name == 'workflow_dispatch'
+    needs: helm-validate
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Helm
+        run: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/kubectl
+
+      - name: Configure kubeconfig
+        run: |
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBE_CONFIG_B64 }}" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Deploy with Helm
+        run: |
+          helm upgrade --install $RELEASE_NAME $CHART_PATH \
+            --namespace $RELEASE_NAMESPACE \
+            --create-namespace \
+            --set image.repository=$IMAGE_REPOSITORY \
+            --set image.tag=${{ inputs.image_tag }}
+
+      - name: Verify rollout
+        run: |
+          kubectl -n $RELEASE_NAMESPACE rollout status deployment/$RELEASE_NAME --timeout=180s
+          kubectl -n $RELEASE_NAMESPACE get all
