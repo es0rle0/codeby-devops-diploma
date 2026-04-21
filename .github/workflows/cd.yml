@@ -79,7 +79,8 @@ jobs:
             --namespace $RELEASE_NAMESPACE \
             --create-namespace \
             --set image.repository=$IMAGE_REPOSITORY \
-            --set image.tag=${{ inputs.image_tag }}
+            --set image.tag=${{ inputs.image_tag }} \
+            --set service.type=NodePort
 
       - name: Verify rollout
         run: |
