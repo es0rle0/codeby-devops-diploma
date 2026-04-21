@@ -1,0 +1,5 @@
+cloud_id                 = "your-cloud-id"
+folder_id                = "your-folder-id"
+zone                     = "ru-central1-a"
+service_account_key_file = "~/.config/yc/sa-keys/terraform-sa-key.json"
+ssh_public_key_path      = "~/.ssh/id_ed25519.pub"
