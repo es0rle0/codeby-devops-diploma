@@ -30,3 +30,9 @@ values-secret.yaml
 
 # Logs
 *.log
+
+
+env.local.sh
+*.auto.tfvars
+*.tfvars
+*.tfvars.json
